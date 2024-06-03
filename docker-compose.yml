@@ -1,0 +1,40 @@
+version: '3'
+services:
+  mongodb:
+    container_name: mongodb_container
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js
+    networks:
+      - bank-network
+    ports:
+      - 27017:27017
+
+  zookeeper:
+    container_name: zookeeper_container
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - bank-network
+
+  kafka:
+    container_name: kafka_container
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - bank-network
+    ports:
+      - 9092:9092
+
+networks:
+  bank-network:
+    driver: bridge
